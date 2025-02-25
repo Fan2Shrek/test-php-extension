@@ -39,6 +39,13 @@ PHP_FUNCTION(test2)
 	RETURN_STR(retval);
 }
 
+PHP_FUNCTION(la_verite)
+{
+	ZEND_PARSE_PARAMETERS_NONE();
+
+    RETURN_STR(strpprintf(0, "Fan2Shrek est le meilleur dev :)\r\n"));
+}
+
 PHP_RINIT_FUNCTION(test)
 {
 #if defined(ZTS) && defined(COMPILE_DL_TEST)
