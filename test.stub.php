@@ -11,4 +11,5 @@ function test2(string $str = ""): string {}
 
 function la_verite(): string {}
 
-function test_scale(float $x): float {}
+function test_scale(mixed $x, ?int $factor = null): mixed {}
+

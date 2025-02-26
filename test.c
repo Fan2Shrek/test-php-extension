@@ -54,13 +54,33 @@ PHP_FUNCTION(la_verite)
 
 PHP_FUNCTION(test_scale)
 {
-    double x;
+    zval *x;
+    zend_long factor = TEST_G(scale); // default value
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_DOUBLE(x)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
+        Z_PARAM_ZVAL(x)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_LONG(factor)
     ZEND_PARSE_PARAMETERS_END();
 
-    RETURN_DOUBLE(x * TEST_G(scale));
+    if (Z_TYPE_P(x) == IS_LONG) {
+        RETURN_LONG(Z_LVAL_P(x) * factor);
+    } else if (Z_TYPE_P(x) == IS_DOUBLE) {
+        RETURN_DOUBLE(Z_DVAL_P(x) * factor);
+    } else if (Z_TYPE_P(x) == IS_STRING) {
+        zend_string *ret = zend_string_safe_alloc(Z_STRLEN_P(x), factor, 0, 0);
+
+        char *p = ZSTR_VAL(ret);
+        while(factor-- > 0) {
+            memcpy(p, Z_STRVAL_P(x), Z_STRLEN_P(x));
+            p += Z_STRLEN_P(x);
+        }
+        *p = '\000';
+        RETURN_STR(ret);
+    } else {
+        php_error_docref(NULL, E_WARNING, "Unexpected argument type");
+        return;
+    }
 }
 
 // Unusued
