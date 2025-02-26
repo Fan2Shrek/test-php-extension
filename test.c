@@ -16,6 +16,12 @@
 	ZEND_PARSE_PARAMETERS_END()
 #endif
 
+ZEND_DECLARE_MODULE_GLOBALS(test)
+
+PHP_INI_BEGIN()
+    STD_PHP_INI_ENTRY("test.scale", "1", PHP_INI_ALL, OnUpdateLong, scale, zend_test_globals, test_globals)
+PHP_INI_END()
+
 PHP_FUNCTION(test1)
 {
 	ZEND_PARSE_PARAMETERS_NONE();
@@ -46,11 +52,30 @@ PHP_FUNCTION(la_verite)
     RETURN_STR(strpprintf(0, "Fan2Shrek est le meilleur dev :)\r\n"));
 }
 
+PHP_FUNCTION(test_scale)
+{
+    double x;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_DOUBLE(x)
+    ZEND_PARSE_PARAMETERS_END();
+
+    RETURN_DOUBLE(x * TEST_G(scale));
+}
+
+// Unusued
 PHP_RINIT_FUNCTION(test)
 {
 #if defined(ZTS) && defined(COMPILE_DL_TEST)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
+
+	return SUCCESS;
+}
+
+PHP_MINIT_FUNCTION(test)
+{
+    REGISTER_INI_ENTRIES();
 
 	return SUCCESS;
 }
@@ -62,17 +87,29 @@ PHP_MINFO_FUNCTION(test)
 	php_info_print_table_end();
 }
 
+static PHP_GINIT_FUNCTION(test)
+{
+#if defined(COMPILE_DL_BCMATH) && defined(ZTS)
+    ZEND_TSRMLS_CACHE_UPDATE();
+#endif
+    test_globals->scale = 1;
+}
+
 zend_module_entry test_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"test",					/* Extension name */
 	ext_functions,					/* zend_function_entry */
-	NULL,							/* PHP_MINIT - Module initialization */
+	PHP_MINIT(test),							/* PHP_MINIT - Module initialization */
 	NULL,							/* PHP_MSHUTDOWN - Module shutdown */
-	PHP_RINIT(test),			/* PHP_RINIT - Request initialization */
+	NULL,  			/* PHP_RINIT - Request initialization */
 	NULL,							/* PHP_RSHUTDOWN - Request shutdown */
 	PHP_MINFO(test),			/* PHP_MINFO - Module info */
 	PHP_TEST_VERSION,		/* Version */
-	STANDARD_MODULE_PROPERTIES
+    PHP_MODULE_GLOBALS(test),  /* Module globals */
+    PHP_GINIT(test),           /* PHP_GINIT – Globals initialization */
+    NULL,                      /* PHP_GSHUTDOWN – Globals shutdown */
+    NULL,
+    STANDARD_MODULE_PROPERTIES_EX
 };
 
 #ifdef COMPILE_DL_TEST
